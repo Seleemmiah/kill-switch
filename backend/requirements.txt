@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+beautifulsoup4
+plaid-python
+python-dotenv
+httpx
+lithic
+supabase
+redis
+sentry-sdk
+python-json-logger
+slowapi
+celery[redis]
+cryptography

@@ -1,0 +1,42 @@
+  void _showNotificationCenter(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => NotificationCenterSheet(
+          notifications: _notifications,
+          onNotificationTap: (id) {
+            setState(() {
+              final notif = _notifications.firstWhere((n) => n.id == id);
+              notif.isRead = true;
+            });
+          },
+          onActionTap: (id) {
+            final notif = _notifications.firstWhere((n) => n.id == id);
+            if (notif.actionUrl != null) {
+              debugPrint('Opening: ${notif.actionUrl}');
+            }
+            Navigator.pop(context);
+          },
+          onDismiss: (id) {
+            setState(() {
+              _notifications.removeWhere((n) => n.id == id);
+            });
+          },
+        ),
+      ),
+    );
+  }
+  
+  void _updateFilteredSubscriptions(List<Subscription> allSubscriptions) {
+    _filteredSubscriptions = SubscriptionFilterHelper.filterSubscriptions(
+      allSubscriptions,
+      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+      category: _selectedCategory,
+      sortBy: _sortBy,
+    );
+  }
