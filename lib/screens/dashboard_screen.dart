@@ -602,7 +602,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   "Seleem",
                   style: GoogleFonts.outfit(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppTheme.obsidian,
                   ),
@@ -624,7 +624,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.notifications_none_rounded,
+                  Icons.notifications,
                   color: isDark ? Colors.white70 : AppTheme.obsidian,
                   size: 22,
                 ),
@@ -729,6 +729,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
+  }
 
   void _showNotificationCenter(BuildContext context) {
     showModalBottomSheet(
@@ -750,7 +751,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onActionTap: (id) {
             final notif = _notifications.firstWhere((n) => n.id == id);
             if (notif.actionUrl != null) {
-              debugPrint('Opening: \${notif.actionUrl}');
+              debugPrint('Opening: ${notif.actionUrl}');
             }
             Navigator.pop(context);
           },
@@ -771,7 +772,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       category: _selectedCategory,
       sortBy: _sortBy,
     );
-  }
   }
 }
 
@@ -825,45 +825,3 @@ class _PulseDotState extends State<_PulseDot>
     );
   }
 }
-
-            Navigator.pop(context);
-          },
-          onDismiss: (id) {
-            setState(() {
-              _notifications.removeWhere((n) => n.id == id);
-            });
-          },
-        ),
-      ),
-    );
-  }
-  
-  void _updateFilteredSubscriptions(List<Subscription> allSubscriptions) {
-    _filteredSubscriptions = SubscriptionFilterHelper.filterSubscriptions(
-      allSubscriptions,
-      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-      category: _selectedCategory,
-      sortBy: _sortBy,
-    );
-
-            Navigator.pop(context);
-          },
-          onDismiss: (id) {
-            setState(() {
-              _notifications.removeWhere((n) => n.id == id);
-            });
-          },
-        ),
-      ),
-    );
-  }
-  
-  void _updateFilteredSubscriptions(List<Subscription> allSubscriptions) {
-    _filteredSubscriptions = SubscriptionFilterHelper.filterSubscriptions(
-      allSubscriptions,
-      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-      category: _selectedCategory,
-      sortBy: _sortBy,
-    );
-  }
-  }

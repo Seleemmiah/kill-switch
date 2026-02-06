@@ -6,7 +6,9 @@ import '../models/subscription.dart';
 
 class ApiService {
   static const String _androidBaseUrl = 'http://10.0.2.2:8000';
-  static const String _iosBaseUrl = 'http://localhost:8000';
+  // Use 127.0.0.1 to avoid IPv6 resolution issues.
+  // If testing on a physical device, replace this with your computer's LAN IP (e.g., http://192.168.1.5:8000)
+  static const String _iosBaseUrl = 'http://127.0.0.1:8000';
 
   static String get baseUrl {
     if (Platform.isAndroid) {
@@ -39,7 +41,13 @@ class ApiService {
         return List<Map<String, dynamic>>.from(jsonDecode(response.body));
       }
     } catch (e) {
-      debugPrint("Global Scan Error: $e");
+      if (e.toString().contains('Connection refused')) {
+        debugPrint(
+          "Backend unreachable at $baseUrl (Connection refused). Using offline mock data.",
+        );
+      } else {
+        debugPrint("Global Scan Error: $e");
+      }
     }
     return [
       {

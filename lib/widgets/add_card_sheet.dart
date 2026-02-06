@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 import 'credit_card_widget.dart';
 import 'add_subscription_sheet.dart';
 import '../services/vault_service.dart';
@@ -75,10 +76,7 @@ class _AddCardSheetState extends State<AddCardSheet> {
   bool _loading = false;
 
   String get _url {
-    final base = (Theme.of(context).platform == TargetPlatform.android)
-        ? "10.0.2.2"
-        : "127.0.0.1";
-    return "http://$base:8000/api/v1/resolve-card";
+    return "${ApiService.baseUrl}/api/v1/resolve-card";
   }
 
   void _resolve() async {
