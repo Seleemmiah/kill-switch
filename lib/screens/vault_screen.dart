@@ -67,6 +67,14 @@ class _VaultScreenState extends State<VaultScreen>
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppTheme.obsidian, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),

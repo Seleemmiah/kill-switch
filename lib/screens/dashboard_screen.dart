@@ -1,25 +1,29 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/subscription.dart';
-import '../services/api_service.dart';
+import '../providers/app_providers.dart';
+import '../services/local_storage_service.dart';
 import '../theme/app_theme.dart';
+import '../services/gmail_service.dart';
 import '../widgets/subscription_item.dart';
 import '../widgets/savings_goal_card.dart';
 import '../widgets/notification_center.dart';
 import '../widgets/search_filter_bar.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/kill_confirmation_dialog.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  final ApiService _apiService = ApiService();
-  late Future<ScanResult> _scanFuture;
-
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // Search and filter state
   String _searchQuery = '';
   String? _selectedCategory;
@@ -56,26 +60,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _scanFuture = _apiService.scanGmail();
+  String get _userName {
+    // Try Firebase first
+    if (Firebase.apps.isNotEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+        return user.displayName!.split(' ').first;
+      }
+    }
+    // Fallback to local storage
+    final localName = LocalStorageService.getUserName();
+    if (localName != 'User') return localName;
+    return 'User';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final subsState = ref.watch(subscriptionsProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            setState(() {
-              _scanFuture = _apiService.scanGmail();
-            });
-            await _scanFuture;
+            ref.read(subscriptionsProvider.notifier).refresh();
           },
           color: AppTheme.gold,
           child: SingleChildScrollView(
@@ -86,24 +96,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildHeader(isDark),
                 const SizedBox(height: 24),
-                FutureBuilder<ScanResult>(
-                  future: _scanFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 100),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppTheme.gold,
-                          ),
-                        ),
+                subsState.when(
+                  loading: () => const SkeletonLoader(),
+                  error: (error, _) => EmptyStateWidget(
+                    icon: Icons.wifi_off_rounded,
+                    title: "Connection Error",
+                    subtitle:
+                        "Couldn't load your subscriptions.\nPull down to retry.",
+                    actionLabel: "Retry",
+                    onAction: () {
+                      ref.read(subscriptionsProvider.notifier).refresh();
+                    },
+                  ),
+                  data: (result) {
+                    if (result.subscriptions.isEmpty) {
+                      return EmptyStateWidget(
+                        icon: Icons.radar_rounded,
+                        title: "No Subscriptions Yet",
+                        subtitle:
+                            "Scan your email to detect hidden subscriptions,\nor add one manually.",
+                        actionLabel: "Scan Now",
+                        onAction: () {
+                          ref.read(subscriptionsProvider.notifier).refresh();
+                        },
                       );
                     }
-                    if (snapshot.hasData) {
-                      return _buildMainContent(snapshot.data!, isDark);
-                    }
-                    return const SizedBox.shrink();
+                    return _buildMainContent(result, isDark);
                   },
                 ),
               ],
@@ -224,7 +242,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       opacity: value,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: SubscriptionItem(subscription: sub),
+                        child: SubscriptionItem(
+                          subscription: sub,
+                          onKill: () => _showKillDialog(sub),
+                        ),
                       ),
                     ),
                   );
@@ -244,12 +265,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 32),
         SavingsGoalCard(
           currentSavings: result.totalSaved,
-          targetSavings: 5000.0,
+          targetSavings: 50000.0,
         ),
         const SizedBox(height: 24),
         _buildHallOfFame(result.killHistory, isDark),
         const SizedBox(height: 40),
       ],
+    );
+  }
+
+  void _showKillDialog(Subscription sub) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => KillConfirmationDialog(
+        subscription: sub,
+        onConfirm: () {
+          ref.read(subscriptionsProvider.notifier).killSubscription(sub);
+        },
+      ),
     );
   }
 
@@ -270,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.obsidian, // Darker base
+            AppTheme.obsidian,
             AppTheme.deepSlate.withValues(alpha: 0.9),
             AppTheme.slate.withValues(alpha: 0.8),
           ],
@@ -401,7 +435,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            "+12.5% SAVED",
+                            result.totalSaved > 0
+                                ? "+${((result.totalSaved / (result.monthlyBurnRate > 0 ? result.monthlyBurnRate : 1)) * 100).toStringAsFixed(1)}% SAVED"
+                                : "START SAVING",
                             style: GoogleFonts.outfit(
                               color: const Color(0xFF00FF94),
                               fontSize: 11,
@@ -471,7 +507,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHallOfFame(List<Subscription> killed, bool isDark) {
-    if (killed.isEmpty) return const SizedBox.shrink();
+    if (killed.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.03),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.emoji_events_rounded,
+              color: isDark ? Colors.white12 : Colors.black12,
+              size: 36,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Hall of Fame",
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: isDark ? Colors.white24 : Colors.black26,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Kill your first subscription to earn\na spot here!",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -600,7 +679,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  "Seleem",
+                  _userName,
                   style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -611,11 +690,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        GestureDetector(
-          onTap: () => _showNotificationCenter(context),
-          child: Stack(
-            children: [
-              Container(
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () async {
+                HapticFeedback.mediumImpact();
+                final gmailService = GmailService();
+                final subs = await gmailService.scanForSubscriptions();
+                if (subs.isNotEmpty) {
+                  for (var sub in subs) {
+                    ref.read(subscriptionsProvider.notifier).addSubscription(sub);
+                  }
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Detected ${subs.length} new subscriptions!'),
+                        backgroundColor: AppTheme.violet,
+                      ),
+                    );
+                  }
+                } else {
+                  ref.read(subscriptionsProvider.notifier).refresh();
+                }
+              },
+              child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isDark
@@ -624,110 +722,192 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.notifications,
+                  Icons.radar_rounded,
                   color: isDark ? Colors.white70 : AppTheme.obsidian,
                   size: 22,
                 ),
               ),
-              if (unreadCount > 0)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showNotificationCenter(context),
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? AppTheme.obsidian : Colors.white,
-                        width: 2,
-                      ),
                     ),
-                    constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
+                    child: Icon(
+                      Icons.notifications,
+                      color: isDark ? Colors.white70 : AppTheme.obsidian,
+                      size: 22,
                     ),
-                    child: Center(
-                      child: Text(
-                        unreadCount > 9 ? '9+' : unreadCount.toString(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark ? AppTheme.obsidian : Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Center(
+                          child: Text(
+                            unreadCount > 9 ? '9+' : unreadCount.toString(),
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildWasteAlert(List<Subscription> subs, bool isDark) {
-    final wastedSubs = subs.where((s) => s.usageLevel < 0.25).toList();
-    if (wastedSubs.isEmpty) return const SizedBox.shrink();
+    // 1. Check for upcoming renewals (this week)
+    final upcoming = subs.where((s) => s.daysRemaining <= 7).toList();
+    final totalUpcoming = upcoming.fold(0.0, (sum, item) => sum + item.price);
 
-    return Container(
-      margin: const EdgeInsets.only(top: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
+    // 2. Check for low usage (financial leaks)
+    final wastedSubs = subs.where((s) => s.usageLevel < 0.25).toList();
+
+    if (upcoming.isEmpty && wastedSubs.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        if (upcoming.isNotEmpty)
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.orange,
-              shape: BoxShape.circle,
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.violet.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.violet.withValues(alpha: 0.2)),
             ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  "Financial Leak Identified",
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Colors.orange[900],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.violet,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
-                Text(
-                  "You've barely used ${wastedSubs.first.name} this month. Neutralize?",
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: Colors.orange[800],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Smart Renewal Alert",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        "You have ${upcoming.length} subscriptions renewing this week totaling ₦${totalUpcoming.toStringAsFixed(0)}. Tap to review.",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+              ],
+            ),
+          ),
+        if (wastedSubs.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Financial Leak Identified",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Colors.orange[900],
+                        ),
+                      ),
+                      Text(
+                        "You've barely used ${wastedSubs.first.name} this month. Neutralize?",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.orange[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _showKillDialog(wastedSubs.first),
+                  child: Text(
+                    "SHUT DOWN",
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: Colors.orange[900],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              "SHUT DOWN",
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-                color: Colors.orange[900],
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

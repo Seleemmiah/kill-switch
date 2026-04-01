@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'dashboard_screen.dart';
-import 'scanner_screen.dart';
 import 'statistics_screen.dart';
 import 'settings_screen.dart';
 import '../theme/app_theme.dart';
@@ -21,7 +20,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   List<Widget> get _screens => [
     const DashboardScreen(),
-    const ScannerScreen(),
     const StatisticsScreen(),
     const SettingsScreen(),
   ];
@@ -31,6 +29,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBody: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _screens[_currentIndex],
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
@@ -51,47 +51,58 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
       bottomNavigationBar: SafeArea(
         child: Container(
-          margin: const EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            0,
-          ), // Moved flush to lower edge
+          margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.slate : Colors.white,
-            borderRadius: BorderRadius.circular(32),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
-                blurRadius: 30,
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                offset: const Offset(0, 10),
+                blurRadius: 20,
+                color: isDark 
+                    ? Colors.black.withValues(alpha: 0.6) 
+                    : const Color(0xFF94A3B8).withValues(alpha: 0.2),
+                offset: const Offset(0, 8),
               ),
             ],
             border: Border.all(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.04),
+                  : Colors.black.withValues(alpha: 0.05),
+              width: 1,
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: GNav(
-              rippleColor: Colors.grey[300]!,
-              hoverColor: Colors.grey[100]!,
-              gap: 5,
-              activeColor: Colors.white,
-              iconSize: 20,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color.fromARGB(255, 5, 2, 12),
+              rippleColor: isDark ? Colors.white10 : AppTheme.violet.withValues(alpha: 0.05),
+              hoverColor: isDark ? Colors.white10 : AppTheme.violet.withValues(alpha: 0.05),
+              gap: 8,
+              activeColor: isDark ? Colors.white : AppTheme.violet,
+              iconSize: 22,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              duration: const Duration(milliseconds: 300),
+              tabBackgroundColor: isDark 
+                  ? Colors.white.withValues(alpha: 0.1) 
+                  : AppTheme.violet.withValues(alpha: 0.1),
               color: isDark
-                  ? Colors.white38
-                  : AppTheme.charcoal.withValues(alpha: 0.5),
-              tabs: const [
-                GButton(icon: Icons.home_rounded, text: 'Home'),
-                GButton(icon: Icons.search_rounded, text: 'Radar'),
-                GButton(icon: Icons.analytics_rounded, text: 'Insights'),
-                GButton(icon: Icons.tune_rounded, text: 'Vault'),
+                  ? Colors.white54
+                  : AppTheme.charcoal,
+              tabs: [
+                GButton(
+                  icon: Icons.home_rounded, 
+                  text: 'Home',
+                  textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.violet),
+                ),
+                GButton(
+                  icon: Icons.analytics_rounded, 
+                  text: 'Insights',
+                  textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.violet),
+                ),
+                GButton(
+                  icon: Icons.settings_rounded, 
+                  text: 'Settings',
+                  textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.violet),
+                ),
               ],
               selectedIndex: _currentIndex,
               onTabChange: (index) {

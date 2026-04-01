@@ -8,7 +8,8 @@ import '../screens/subscription_detail_screen.dart';
 
 class SubscriptionItem extends StatefulWidget {
   final Subscription subscription;
-  const SubscriptionItem({super.key, required this.subscription});
+  final VoidCallback? onKill;
+  const SubscriptionItem({super.key, required this.subscription, this.onKill});
 
   @override
   State<SubscriptionItem> createState() => _SubscriptionItemState();
@@ -61,17 +62,17 @@ class _SubscriptionItemState extends State<SubscriptionItem>
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: widget.subscription.usageLevel < 0.2
-                  ? Colors.red.withOpacity(0.3 * _pulseAnimation.value)
+                  ? Colors.red.withValues(alpha: 0.3 * _pulseAnimation.value)
                   : (isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.04)),
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.04)),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 color: widget.subscription.usageLevel < 0.2
-                    ? Colors.red.withOpacity(0.1 * _pulseAnimation.value)
-                    : Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                    ? Colors.red.withValues(alpha: 0.1 * _pulseAnimation.value)
+                    : Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -104,7 +105,7 @@ class _SubscriptionItemState extends State<SubscriptionItem>
                         height: 56,
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withOpacity(0.08)
+                              ? Colors.white.withValues(alpha: 0.08)
                               : AppTheme.coolGrey,
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -169,7 +170,7 @@ class _SubscriptionItemState extends State<SubscriptionItem>
                                     ? const Color(0xFFF59E0B)
                                     : Colors.grey,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 4),
                               Text(
                                 isTrial
                                     ? "Due in ${widget.subscription.renewalDate}"
@@ -239,8 +240,8 @@ class _SubscriptionItemState extends State<SubscriptionItem>
             value: progress,
             minHeight: 3,
             backgroundColor: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.black.withOpacity(0.05),
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),

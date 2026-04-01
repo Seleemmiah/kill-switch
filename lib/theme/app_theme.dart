@@ -6,12 +6,12 @@ class AppTheme {
   static const Color obsidian = Color(0xFF030712); // Deep Rich Black
   static const Color deepSlate = Color(0xFF0F172A); // Midnight Grey
   static const Color slate = Color(0xFF1F2937); // Component Surface
-  static const Color violet = Color(0xFF8B5CF6);
-  static const Color violetLight = Color(0xFFC4B5FD);
+  static const Color violet = Color(0xFF2563EB); // Elegant Sapphire Blue instead of Purple
+  static const Color violetLight = Color(0xFF60A5FA);
 
   // Aliases for compatibility
-  static const Color gold = violet;
-  static const Color accent = violetLight;
+  static const Color gold = Color(0xFF2563EB); // Reuse primary alias
+  static const Color accent = Color(0xFF60A5FA);
   static const Color alert = Color(0xFFEF4444);
   static const Color charcoal = Color(0xFF64748B);
   static const Color coolGrey = Color(0xFFF8FAFC);
@@ -42,7 +42,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: Colors.white.withOpacity(0.05)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -73,7 +73,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: Colors.black.withOpacity(0.04)),
+          side: BorderSide(color: Colors.black.withValues(alpha: 0.04)),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -83,7 +83,7 @@ class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
         selectedItemColor: violet,
-        unselectedItemColor: textSecond.withOpacity(0.4),
+        unselectedItemColor: textSecond.withValues(alpha: 0.4),
       ),
     );
   }

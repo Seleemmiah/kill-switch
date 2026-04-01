@@ -152,11 +152,11 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.02)
-            : Colors.black.withOpacity(0.02),
+            ? Colors.white.withValues(alpha: 0.02)
+            : Colors.black.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: value ? activeColor.withOpacity(0.3) : Colors.transparent,
+          color: value ? activeColor.withValues(alpha: 0.3) : Colors.transparent,
         ),
       ),
       child: Row(
@@ -186,7 +186,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
           ),
           Switch.adaptive(
             value: value,
-            activeColor: activeColor,
+            activeTrackColor: activeColor,
             onChanged: onChanged,
           ),
         ],
@@ -243,7 +243,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
             prefixIcon: prefix,
             filled: true,
             fillColor: isDark
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -276,7 +276,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -308,11 +308,11 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isTrial ? AppTheme.violet.withOpacity(0.1) : Colors.transparent,
+        color: _isTrial ? AppTheme.violet.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: _isTrial
-              ? AppTheme.violet.withOpacity(0.3)
+              ? AppTheme.violet.withValues(alpha: 0.3)
               : (isDark ? Colors.white12 : Colors.black12),
         ),
       ),
@@ -349,7 +349,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
           ),
           Switch.adaptive(
             value: _isTrial,
-            activeColor: AppTheme.violet,
+            activeTrackColor: AppTheme.violet,
             onChanged: (v) => setState(() => _isTrial = v),
           ),
         ],
@@ -384,7 +384,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -452,7 +452,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

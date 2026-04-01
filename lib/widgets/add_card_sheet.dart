@@ -326,21 +326,21 @@ class _AddCardSheetState extends State<AddCardSheet> {
                     final newCard = {
                       "last4": l4(_numC.text),
                       "brand": _brand,
-                      "color": _getColor(_brand).value,
+                      "color": _getColor(_brand).toARGB32(),
                       "expiry": _expC.text,
                       "isDefault": false,
                       "bank": _bank,
                     };
                     await _vaultService.saveCard(newCard);
                     widget.onCardAdded(newCard);
-                    if (mounted) Navigator.pop(context);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
                   } catch (e) {
                     debugPrint("Save Card Error: $e");
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to save card: $e')),
-                      );
-                    }
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to save card: $e')),
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(

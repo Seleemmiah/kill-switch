@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'vault_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,7 @@ import 'auth_screen.dart';
 import '../widgets/credit_card_widget.dart';
 import '../widgets/add_card_sheet.dart';
 import '../services/vault_service.dart';
+import '../services/local_storage_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,11 +20,15 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final VaultService _vaultService = VaultService();
   List<Map<String, dynamic>> _userCards = [];
+  bool _notificationsEnabled = true;
+  bool _ghostCardEncryption = false;
 
   @override
   void initState() {
     super.initState();
     _loadCards();
+    _notificationsEnabled = LocalStorageService.getNotificationsEnabled();
+    _ghostCardEncryption = LocalStorageService.getAutoKillEnabled();
   }
 
   Future<void> _loadCards() async {
@@ -80,12 +86,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "SECURITY VAULT",
+          "SETTINGS",
           style: GoogleFonts.outfit(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             letterSpacing: 2.0,
-            color: AppTheme.gold,
+            color: isDark ? Colors.white70 : AppTheme.obsidian,
           ),
         ),
       ),
@@ -95,18 +101,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildProfileSection(user, isDark),
           const SizedBox(height: 32),
 
-          _buildSectionHeader("SECURE ASSETS"),
+          _buildSectionHeader("FUNDING SOURCES"),
           const SizedBox(height: 12),
           _buildVaultSection(isDark, user),
           const SizedBox(height: 24),
 
-          _buildSectionHeader("PROTECTION PROTOCOLS"),
+          _buildSectionHeader("SECURITY PROTOCOLS"),
           const SizedBox(height: 12),
           _buildFintechGroup(isDark, [
             _buildTile(
+              icon: Icons.fingerprint_rounded,
+              title: "Open Biometric Vault",
+              subtitle: "Access encrypted card details",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VaultScreen(onUnlocked: () => Navigator.pop(context)),
+                  ),
+                );
+              },
+            ),
+            _buildTile(
               icon: Icons.verified_user_rounded,
               title: "Kill Switch Sensitivity",
-              subtitle: "Automatic neutralization at 24h",
+              subtitle: "Manual or Auto neutralization",
               onTap: () {},
             ),
             _buildTile(
@@ -114,9 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "Ghost Card Encryption",
               subtitle: "Protect physical card digits",
               trailing: Switch.adaptive(
-                value: false,
-                activeColor: AppTheme.violet,
-                onChanged: (_) {},
+                value: _ghostCardEncryption,
+                activeTrackColor: AppTheme.violet,
+                onChanged: (val) {
+                  setState(() => _ghostCardEncryption = val);
+                  LocalStorageService.setAutoKillEnabled(val);
+                },
               ),
             ),
           ]),
@@ -130,9 +152,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "Push Notifications",
               subtitle: "Alerts before conversion",
               trailing: Switch.adaptive(
-                value: true,
-                activeColor: AppTheme.violet,
-                onChanged: (_) {},
+                value: _notificationsEnabled,
+                activeTrackColor: AppTheme.violet,
+                onChanged: (val) {
+                  setState(() => _notificationsEnabled = val);
+                  LocalStorageService.setNotificationsEnabled(val);
+                },
               ),
             ),
             _buildTile(
@@ -174,15 +199,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.03),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
         ),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: AppTheme.violet.withOpacity(0.1),
+            backgroundColor: AppTheme.violet.withValues(alpha: 0.1),
             child: const Icon(
               Icons.person_outline_rounded,
               color: AppTheme.violet,
@@ -215,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.gold.withOpacity(0.1),
+              color: AppTheme.gold.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -238,8 +263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         height: 100,
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.02)
-              : Colors.black.withOpacity(0.02),
+              ? Colors.white.withValues(alpha: 0.02)
+              : Colors.black.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white12, style: BorderStyle.none),
         ),
@@ -287,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 12),
         _buildTile(
           icon: Icons.add_rounded,
-          title: "Link New Guardian Card",
+          title: "Link New Card",
           subtitle: "Expand your protection vault",
           onTap: _showAddCardSheet,
         ),
@@ -302,8 +327,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.03),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
         ),
       ),
       child: Column(
@@ -318,8 +343,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   indent: 60,
                   endIndent: 16,
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.black.withOpacity(0.03),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
                 ),
             ],
           );
@@ -347,8 +372,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppTheme.violet.withOpacity(0.1)
-                    : AppTheme.violet.withOpacity(0.05),
+                    ? AppTheme.violet.withValues(alpha: 0.1)
+                    : AppTheme.violet.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: AppTheme.violet, size: 20),
@@ -400,10 +425,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          side: const BorderSide(color: Colors.redAccent, width: 1.5),
+          side: const BorderSide(color: Colors.redAccent, width: 1),
         ),
         child: Text(
-          "SECURE LOGOUT",
+          "LOGOUT",
           style: GoogleFonts.outfit(
             color: Colors.redAccent,
             fontWeight: FontWeight.w700,

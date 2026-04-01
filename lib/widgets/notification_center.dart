@@ -130,7 +130,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -241,7 +241,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.delete_outline, color: Colors.red),
@@ -255,7 +255,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
           border: Border.all(
             color: notif.isRead
                 ? Colors.transparent
-                : notif.priorityColor.withOpacity(0.3),
+                : notif.priorityColor.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -267,7 +267,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: notif.priorityColor.withOpacity(0.1),
+                    color: notif.priorityColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -357,7 +357,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
           Icon(
             Icons.notifications_none_rounded,
             size: 64,
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(

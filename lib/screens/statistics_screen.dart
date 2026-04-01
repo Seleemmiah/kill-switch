@@ -87,7 +87,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.slate : Colors.black.withOpacity(0.05),
+        color: isDark ? AppTheme.slate : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -107,7 +107,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: AppTheme.violet.withOpacity(0.3),
+                            color: AppTheme.violet.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -150,15 +150,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [AppTheme.violet.withOpacity(0.8), AppTheme.violet]
-              : [AppTheme.violet, AppTheme.violet.withOpacity(0.9)],
+              ? [AppTheme.violet.withValues(alpha: 0.8), AppTheme.violet]
+              : [AppTheme.violet, AppTheme.violet.withValues(alpha: 0.9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.violet.withOpacity(0.3),
+            color: AppTheme.violet.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -252,7 +252,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         color: isDark ? AppTheme.slate : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
         ),
       ),
       child: LineChart(
@@ -375,8 +375,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.violet.withOpacity(0.2),
-                    AppTheme.violet.withOpacity(0),
+                    AppTheme.violet.withValues(alpha: 0.2),
+                    AppTheme.violet.withValues(alpha: 0),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -482,9 +482,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.gold.withOpacity(0.1),
+        color: AppTheme.gold.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.gold.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [

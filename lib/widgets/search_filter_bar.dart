@@ -47,8 +47,8 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
           ),
           child: Row(
@@ -136,7 +136,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
               : (isDark ? AppTheme.slate : Colors.grey.shade200),
           borderRadius: BorderRadius.circular(20),
           border: isSelected
-              ? Border.all(color: AppTheme.violet.withOpacity(0.5), width: 2)
+              ? Border.all(color: AppTheme.violet.withValues(alpha: 0.5), width: 2)
               : null,
         ),
         child: Row(

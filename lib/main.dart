@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'services/local_storage_service.dart';
+import 'services/notification_helper.dart';
 import 'screens/auth_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize local storage (Hive)
+  await LocalStorageService.init();
+
+  // Initialize notifications
+  await NotificationHelper.init();
+  await NotificationHelper.requestPermissions();
+
+  // Initialize Firebase
   try {
-    // Attempt initialization. If files are missing, this will catch.
     await Firebase.initializeApp().timeout(const Duration(seconds: 3));
     debugPrint("✅ Firebase Initialized Successfully");
   } catch (e) {
@@ -16,20 +28,30 @@ void main() async {
     debugPrint("To enable Firebase, add your GoogleService files.");
     debugPrint("--------------------------------------------------");
   }
-  runApp(const KillSwitchApp());
+
+  // Check onboarding status
+  final onboardingComplete = await LocalStorageService.isOnboardingComplete();
+
+  runApp(
+    ProviderScope(
+      child: KillSwitchApp(showOnboarding: !onboardingComplete),
+    ),
+  );
 }
 
 class KillSwitchApp extends StatelessWidget {
-  const KillSwitchApp({super.key});
+  final bool showOnboarding;
+  const KillSwitchApp({super.key, this.showOnboarding = false});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Kill Switch',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: const AuthScreen(),
+      home: showOnboarding ? const OnboardingScreen() : const AuthScreen(),
     );
   }
 }

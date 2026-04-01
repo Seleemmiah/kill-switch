@@ -76,10 +76,10 @@ class _GhostCardWidgetState extends State<GhostCardWidget>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.2),
+            color: Colors.blue.withValues(alpha: 0.2),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -179,7 +179,7 @@ class _GhostCardWidgetState extends State<GhostCardWidget>
         decoration: BoxDecoration(
           color: const Color(0xFF0F172A),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
@@ -193,7 +193,7 @@ class _GhostCardWidgetState extends State<GhostCardWidget>
                   Container(
                     width: 160,
                     height: 30,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 8),
                     child: Text(
